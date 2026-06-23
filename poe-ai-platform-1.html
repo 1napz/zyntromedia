@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poe AI Platform - God Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+        :root { --primary: 139 92 246; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        .title-font { font-family: 'Space Grotesk', sans-serif; }
+        .hero-bg { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); }
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4); }
+        .glow { box-shadow: 0 0 25px -5px rgb(167 139 250), 0 0 10px -5px rgb(167 139 250); }
+        .token-counter { font-variant-numeric: tabular-nums; }
+        .regen-bar { transition: width 0.3s ease-in-out; }
+        .billing-btn { transition: all 0.2s; }
+        .billing-btn.active { background: white; color: black; }
+        #chat-messages::-webkit-scrollbar { width: 4px; }
+        #chat-messages::-webkit-scrollbar-track { background: transparent; }
+        #chat-messages::-webkit-scrollbar-thumb { background: #4B5563; border-radius: 99px; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-lg border-b border-violet-500/20">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-x-3">
+            <div class="w-9 h-9 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl flex items-center justify-center text-xl font-bold">P</div>
+            <span class="title-font text-2xl font-semibold tracking-tighter">Poe AI</span>
+        </div>
+        <div class="hidden md:flex items-center gap-x-8 text-sm font-medium">
+            <a href="#models" class="hover:text-violet-400 transition-colors">Models</a>
+            <a href="#pricing" class="hover:text-violet-400 transition-colors">Pricing</a>
+            <a href="#integrations" class="hover:text-violet-400 transition-colors">Integrations</a>
+            <a href="#tools" class="hover:text-violet-400 transition-colors">Tools</a>
+            <a href="#godmode" class="text-amber-400 hover:text-amber-300 transition-colors">God Mode</a>
+        </div>
+        <button onclick="toggleMockMode()" id="mock-btn"
+                class="px-5 py-2.5 bg-white text-black rounded-2xl font-semibold text-sm flex items-center gap-x-2 hover:bg-violet-100 transition-all">
+            <i class="fas fa-toggle-off" id="mock-icon"></i>
+            <span id="mock-status">Mock Mode: OFF</span>
+        </button>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero-bg min-h-screen flex items-center pt-24 pb-16">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+        <div class="space-y-8">
+            <div class="inline-flex items-center gap-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-3xl text-sm">
+                <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span>Live • 247 Models Online</span>
+            </div>
+            <h1 class="title-font text-6xl md:text-8xl font-bold leading-none tracking-tighter">
+                Poe AI<br>
+                <span class="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-amber-400 bg-clip-text text-transparent">God Mode</span>
+            </h1>
+            <p class="text-lg text-zinc-400 max-w-lg leading-relaxed">
+                10x tokens • Auto-regen every 5s • Seed growth • Multi-channel AI orchestration
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="document.getElementById('chat-demo').scrollIntoView({behavior:'smooth'})"
+                        class="px-8 py-4 bg-white text-black rounded-3xl font-semibold text-base flex items-center gap-x-3 hover:scale-105 transition-all">
+                    <i class="fas fa-bolt text-violet-600"></i> Start Chatting Free
+                </button>
+                <button onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})"
+                        class="px-8 py-4 border border-white/40 hover:border-white rounded-3xl font-semibold text-base transition-all hover:bg-white/5">
+                    View Plans
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-6 pt-4">
+                <div>
+                    <div id="live-models" class="text-4xl font-mono font-bold text-violet-400 token-counter">0</div>
+                    <div class="text-sm text-zinc-500 mt-1">Models</div>
+                </div>
+                <div>
+                    <div id="live-tokens" class="text-4xl font-mono font-bold text-emerald-400 token-counter">0</div>
+                    <div class="text-sm text-zinc-500 mt-1">Tokens Today</div>
+                </div>
+                <div>
+                    <div id="live-users" class="text-4xl font-mono font-bold text-amber-400 token-counter">0</div>
+                    <div class="text-sm text-zinc-500 mt-1">Active Users</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Demo -->
+        <div class="relative">
+            <div class="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-transparent rounded-[3rem] blur-3xl"></div>
+            <div id="chat-demo" class="bg-zinc-900 rounded-3xl p-6 border border-violet-500/30 glow relative">
+                <div class="flex items-center justify-between mb-5">
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-sm font-bold">P</div>
+                        <div>
+                            <div class="font-semibold text-sm">Poe Assistant</div>
+                            <div class="text-xs text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block"></span> Online • God Mode</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-zinc-500 bg-zinc-800 px-3 py-1 rounded-full">GPT-5 / Claude 4.5</div>
+                </div>
+
+                <div id="chat-messages" class="h-72 overflow-y-auto space-y-4 mb-5 text-sm pr-1">
+                    <div class="flex gap-x-3">
+                        <div class="w-7 h-7 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex-shrink-0 mt-0.5"></div>
+                        <div class="bg-zinc-800 px-4 py-3 rounded-2xl rounded-tl-sm text-zinc-200 max-w-[85%]">
+                            👋 สวัสดี! ผมคือ Poe AI ใน God Mode พร้อมให้บริการด้วย context window 1.28M tokens ครับ
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <input id="chat-input" type="text"
+                           class="flex-1 bg-zinc-800 border border-zinc-700 focus:border-violet-500 rounded-2xl px-5 py-3 outline-none text-sm placeholder-zinc-500 transition-colors"
+                           placeholder="พิมพ์คำถามได้เลย...">
+                    <button onclick="sendMockMessage()"
+                            class="w-12 h-12 bg-violet-600 hover:bg-violet-500 rounded-2xl flex items-center justify-center transition-all hover:scale-105">
+                        <i class="fas fa-paper-plane text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MODELS -->
+<section id="models" class="py-24 bg-black">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-14">
+            <div class="text-violet-400 text-sm uppercase tracking-widest mb-3 font-medium">Frontier Models</div>
+            <h2 class="text-5xl title-font font-bold mb-3">Supported Models</h2>
+            <p class="text-zinc-400">Access 247+ frontier models with a unified API</p>
+        </div>
+        <div id="models-grid" class="grid md:grid-cols-4 gap-5"></div>
+    </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="py-24 bg-zinc-950">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+            <div>
+                <h2 class="text-5xl title-font font-bold">Pricing Tiers</h2>
+                <p class="text-zinc-400 mt-2">Including God Mode • Flexible billing</p>
+            </div>
+            <div class="flex items-center bg-zinc-900 rounded-2xl p-1 border border-zinc-800">
+                <button onclick="toggleBilling(this, 'month')" data-period="month"
+                        class="billing-btn active px-5 py-2 rounded-xl text-sm font-medium">Monthly</button>
+                <button onclick="toggleBilling(this, 'year')" data-period="year"
+                        class="billing-btn px-5 py-2 rounded-xl text-sm font-medium text-zinc-400">Yearly <span class="text-emerald-400 text-xs">−20%</span></button>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4" id="pricing-cards"></div>
+    </div>
+</section>
+
+<!-- COST OPTIMIZER -->
+<section class="py-24 bg-black">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-14">
+            <h2 class="text-4xl title-font font-bold">Cost Optimizer</h2>
+            <p class="text-zinc-400 mt-2">See how much you save vs. direct API pricing</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+                <h3 class="font-semibold mb-6 text-lg">Savings Calculator</h3>
+                <div class="space-y-8">
+                    <div>
+                        <div class="flex justify-between text-sm mb-3">
+                            <label class="text-zinc-400">Monthly API Calls</label>
+                            <span id="call-value" class="font-mono font-semibold text-white">1,200</span>
+                        </div>
+                        <input type="range" id="call-slider" min="100" max="10000" value="1200"
+                               class="w-full accent-violet-500 h-2 rounded-full" oninput="updateCost()">
+                        <div class="flex justify-between text-xs text-zinc-600 mt-2">
+                            <span>100</span><span>10K</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-zinc-800/60 rounded-2xl p-5">
+                            <div class="text-xs text-zinc-500 uppercase tracking-wide mb-2">Poe Cost</div>
+                            <div class="text-emerald-400 text-3xl font-mono font-bold" id="poe-cost">$12.36</div>
+                        </div>
+                        <div class="bg-zinc-800/60 rounded-2xl p-5">
+                            <div class="text-xs text-zinc-500 uppercase tracking-wide mb-2">OpenAI Direct</div>
+                            <div class="line-through text-zinc-500 text-3xl font-mono font-bold" id="openai-cost">$89</div>
+                            <div class="text-emerald-400 text-xs mt-1 font-semibold">86% saved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+                <h3 class="font-semibold mb-6 text-lg">Token Usage Estimator</h3>
+                <select id="tier-select" onchange="updateCost()"
+                        class="w-full bg-zinc-800 border border-zinc-700 p-4 rounded-2xl mb-6 text-sm outline-none focus:border-violet-500 transition-colors">
+                    <option value="Standard">Standard — 1M tokens / month</option>
+                    <option value="Premium">Premium — 2M tokens / month</option>
+                    <option value="God">👑 God Mode — 10M+ tokens / month</option>
+                </select>
+                <div id="token-stats" class="space-y-3 text-sm">
+                    <div class="bg-zinc-800/60 rounded-2xl p-4 flex justify-between">
+                        <span class="text-zinc-400">Monthly tokens</span>
+                        <span class="font-mono font-semibold">1,000,000</span>
+                    </div>
+                    <div class="bg-zinc-800/60 rounded-2xl p-4 flex justify-between">
+                        <span class="text-zinc-400">Context window</span>
+                        <span class="font-mono font-semibold">128K</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AUTO REGEN + SEED -->
+<section class="py-24 bg-zinc-950 border-y border-violet-500/10">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-14">
+            <h2 class="text-4xl title-font font-bold">Token Economy</h2>
+            <p class="text-zinc-400 mt-2">Auto-regen + Seed growth system</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Auto Regen -->
+            <div class="bg-gradient-to-br from-zinc-900 to-black border border-emerald-500/30 rounded-3xl p-8">
+                <div class="flex items-center gap-x-4 mb-8">
+                    <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-sync-alt text-2xl text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl title-font font-bold">Auto-Regen</h3>
+                        <p class="text-emerald-400 text-sm">Regenerates every 5 seconds</p>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="flex justify-between items-end mb-3">
+                        <span class="text-sm text-zinc-400">Current Balance</span>
+                        <span id="regen-balance" class="font-mono text-3xl font-bold text-emerald-400">1,248,932</span>
+                    </div>
+                    <div class="h-2.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div id="regen-progress" class="regen-bar h-2.5 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full" style="width:78%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-zinc-600 mt-2">
+                        <span>0</span><span>1.6M cap</span>
+                    </div>
+                </div>
+                <button onclick="simulateRegen()"
+                        class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 rounded-2xl font-semibold flex items-center justify-center gap-x-3 transition-all hover:scale-[1.02]">
+                    <i class="fas fa-bolt"></i> Simulate 5s Regeneration
+                </button>
+            </div>
+
+            <!-- Seed Token -->
+            <div class="bg-gradient-to-br from-amber-900/20 to-black border border-amber-500/30 rounded-3xl p-8">
+                <div class="flex items-center gap-x-4 mb-8">
+                    <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center">
+                        <i class="fas fa-seedling text-2xl text-amber-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl title-font font-bold">Seed Tokens</h3>
+                        <p class="text-amber-400 text-sm">Carry forward + 10% monthly growth</p>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-zinc-800">
+                        <span class="text-zinc-400 text-sm">Base Unused</span>
+                        <span id="seed-base" class="font-mono font-semibold">700,000</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b border-zinc-800">
+                        <span class="text-zinc-400 text-sm">Growth Bonus (3 months)</span>
+                        <span id="seed-growth" class="font-mono font-semibold text-amber-400">+210,000</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3">
+                        <span class="text-sm uppercase tracking-widest text-zinc-500">Free Next Month</span>
+                        <div class="text-right">
+                            <div class="text-3xl font-bold text-amber-400" id="seed-total">910,000</div>
+                            <div class="text-xs text-zinc-500">tokens</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- INTEGRATIONS -->
+<section id="integrations" class="py-24 bg-black">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-14">
+            <h2 class="text-5xl title-font font-bold mb-3">Channel Integrations</h2>
+            <p class="text-zinc-400">Deploy your AI across every platform your users are on</p>
+        </div>
+        <div class="grid md:grid-cols-4 gap-5">
+            <div class="bg-zinc-900 p-8 rounded-3xl card-hover text-center border border-zinc-800 hover:border-emerald-500/50 transition-colors">
+                <div class="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <i class="fab fa-whatsapp text-3xl text-emerald-500"></i>
+                </div>
+                <h4 class="font-semibold text-lg">WhatsApp</h4>
+                <p class="text-sm text-zinc-500 mt-2">Business API + Webhooks</p>
+            </div>
+            <div class="bg-zinc-900 p-8 rounded-3xl card-hover text-center border border-zinc-800 hover:border-sky-500/50 transition-colors">
+                <div class="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <i class="fab fa-telegram text-3xl text-sky-400"></i>
+                </div>
+                <h4 class="font-semibold text-lg">Telegram</h4>
+                <p class="text-sm text-zinc-500 mt-2">aiogram Bot</p>
+            </div>
+            <div class="bg-zinc-900 p-8 rounded-3xl card-hover text-center border border-zinc-800 hover:border-indigo-500/50 transition-colors">
+                <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <i class="fab fa-discord text-3xl text-indigo-400"></i>
+                </div>
+                <h4 class="font-semibold text-lg">Discord</h4>
+                <p class="text-sm text-zinc-500 mt-2">discord.py Slash Commands</p>
+            </div>
+            <div class="bg-zinc-900 p-8 rounded-3xl card-hover text-center border border-zinc-800 hover:border-orange-500/50 transition-colors">
+                <div class="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                    <i class="fas fa-gamepad text-3xl text-orange-400"></i>
+                </div>
+                <h4 class="font-semibold text-lg">Steam</h4>
+                <p class="text-sm text-zinc-500 mt-2">Player Analytics + AI Guides</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools" class="py-24 bg-zinc-950">
+    <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-8">
+        <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-flask text-emerald-400"></i>
+                </div>
+                <h3 class="text-2xl title-font font-bold">Mock Mode</h3>
+            </div>
+            <div class="space-y-4 mb-6">
+                <div class="flex items-center gap-3 text-sm">
+                    <i class="fas fa-check text-emerald-400 w-4"></i>
+                    <span>Zero-cost testing with simulated responses</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm">
+                    <i class="fas fa-check text-emerald-400 w-4"></i>
+                    <span>FastAPI local server with hot reload</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm">
+                    <i class="fas fa-check text-emerald-400 w-4"></i>
+                    <span>Full OpenAPI docs at /docs</span>
+                </div>
+            </div>
+            <pre class="bg-black p-5 rounded-2xl text-xs overflow-auto text-emerald-300 font-mono leading-relaxed">MOCK_MODE=true uvicorn app:app --reload
+# → http://localhost:8000
+# → http://localhost:8000/docs</pre>
+        </div>
+
+        <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-network-wired text-violet-400"></i>
+                </div>
+                <h3 class="text-2xl title-font font-bold">Edge State (CDN)</h3>
+            </div>
+            <p class="text-zinc-400 text-sm mb-6 leading-relaxed">
+                Sub-5ms token quota tracking with Cloudflare KV &amp; Upstash Redis — globally replicated, atomic INCR operations.
+            </p>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between bg-black/50 rounded-2xl p-4 text-sm">
+                    <span class="text-zinc-400">Latency</span>
+                    <span class="font-mono text-violet-400 font-semibold">&lt; 5ms globally</span>
+                </div>
+                <div class="flex items-center justify-between bg-black/50 rounded-2xl p-4 text-sm">
+                    <span class="text-zinc-400">Operations</span>
+                    <span class="font-mono text-violet-400 font-semibold">Atomic INCR / DECR</span>
+                </div>
+                <div class="flex items-center justify-between bg-black/50 rounded-2xl p-4 text-sm">
+                    <span class="text-zinc-400">Distribution</span>
+                    <span class="font-mono text-violet-400 font-semibold">300+ PoPs</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- GOD MODE -->
+<section id="godmode" class="py-24 bg-gradient-to-b from-black to-zinc-950 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-6 text-center relative">
+        <div class="inline-flex items-center gap-x-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 px-6 py-3 rounded-3xl mb-8">
+            <i class="fas fa-crown text-amber-400"></i>
+            <span class="font-semibold tracking-widest text-sm">GOD MODE ACTIVATED</span>
+        </div>
+        <h2 class="text-6xl md:text-7xl title-font font-bold mb-6 bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">10x Everything</h2>
+        <p class="max-w-lg mx-auto text-zinc-400 text-lg">1.28M context • 10M tokens/mo • Unlimited teams • Dedicated infrastructure</p>
+
+        <div class="mt-16 grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div class="bg-zinc-900/80 p-10 rounded-3xl border border-amber-400/20 hover:border-amber-400/50 transition-colors">
+                <div class="text-5xl font-bold text-amber-400 mb-3">1.28M</div>
+                <div class="uppercase text-xs tracking-widest text-zinc-500">Context Window</div>
+            </div>
+            <div class="bg-zinc-900/80 p-10 rounded-3xl border border-amber-400/30 ring-1 ring-amber-400/20">
+                <div class="text-5xl font-bold text-amber-400 mb-3">10M+</div>
+                <div class="uppercase text-xs tracking-widest text-zinc-500">Monthly Tokens</div>
+            </div>
+            <div class="bg-zinc-900/80 p-10 rounded-3xl border border-amber-400/20 hover:border-amber-400/50 transition-colors">
+                <div class="text-5xl font-bold text-amber-400 mb-3">∞</div>
+                <div class="uppercase text-xs tracking-widest text-zinc-500">Team Members</div>
+            </div>
+        </div>
+
+        <button class="mt-12 px-10 py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-lg rounded-3xl flex items-center gap-x-3 mx-auto transition-all hover:scale-105 shadow-lg shadow-amber-500/20">
+            <i class="fas fa-crown"></i> Upgrade to God Mode — $999/mo
+        </button>
+    </div>
+</section>
+
+<footer class="bg-black py-10 border-t border-zinc-900">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-zinc-500 text-sm">
+        <div class="flex items-center gap-x-3">
+            <div class="w-7 h-7 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg flex items-center justify-center text-xs font-bold text-white">P</div>
+            <span>Poe AI Platform</span>
+        </div>
+        <span>Built with ❤️ by <span class="text-violet-400">Zyntro AI Studio</span></span>
+        <div class="flex gap-4">
+            <a href="#" class="hover:text-white transition-colors">Privacy</a>
+            <a href="#" class="hover:text-white transition-colors">Terms</a>
+            <a href="#" class="hover:text-white transition-colors">Docs</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // ─── Counters ───
+    function animateCounter(id, target, duration = 2000) {
+        let start = 0;
+        const el = document.getElementById(id);
+        const step = Math.ceil(target / (duration / 16));
+        const timer = setInterval(() => {
+            start = Math.min(start + step, target);
+            el.textContent = start.toLocaleString('en-US');
+            if (start >= target) clearInterval(timer);
+        }, 16);
+    }
+
+    // ─── Models ───
+    const MODELS = [
+        { name: "GPT-5", provider: "OpenAI", context: "200K", color: "text-emerald-400", icon: "🤖" },
+        { name: "Claude 4.5", provider: "Anthropic", context: "1M", color: "text-violet-400", icon: "🔮" },
+        { name: "Gemini 2.5", provider: "Google", context: "2M", color: "text-blue-400", icon: "✨" },
+        { name: "Llama 4", provider: "Meta", context: "10M", color: "text-orange-400", icon: "🦙" },
+    ];
+
+    function renderModels() {
+        document.getElementById('models-grid').innerHTML = MODELS.map(m => `
+            <div class="bg-zinc-900 rounded-2xl p-6 card-hover border border-zinc-800 hover:border-violet-500/30 transition-colors">
+                <div class="text-2xl mb-3">${m.icon}</div>
+                <div class="font-semibold text-lg">${m.name}</div>
+                <div class="text-zinc-500 text-sm mt-0.5">${m.provider}</div>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs text-zinc-600 uppercase tracking-wide">Context</span>
+                    <span class="${m.color} font-mono font-semibold">${m.context}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ─── Pricing ───
+    const TIERS = [
+        { name: "Free",     price: 0,      tokens: "3K",    context: "4K",       color: "zinc" },
+        { name: "Lite",     price: 4.99,   tokens: "10K",   context: "16K",      color: "zinc" },
+        { name: "Standard", price: 19.99,  tokens: "1M",    context: "128K",     color: "violet", featured: true },
+        { name: "Premium",  price: 34.99,  tokens: "2M",    context: "200K",     color: "fuchsia" },
+        { name: "Advanced", price: 120,    tokens: "12.5M", context: "Unlimited",color: "amber" },
+        { name: "God",      price: 999,    tokens: "10M+",  context: "1.28M",    color: "amber",  god: true },
+    ];
+
+    let billingPeriod = 'month';
+
+    function renderPricing() {
+        document.getElementById('pricing-cards').innerHTML = TIERS.map(t => {
+            const price = billingPeriod === 'year' && t.price > 0
+                ? (t.price * 0.8).toFixed(2)
+                : t.price.toFixed(t.price === 0 ? 0 : 2);
+
+            const borderClass = t.god
+                ? 'border-amber-400/40 bg-gradient-to-br from-amber-900/20 to-zinc-900'
+                : t.featured
+                    ? 'border-violet-500/50 ring-1 ring-violet-500/30 bg-zinc-900'
+                    : 'border-zinc-800 bg-zinc-900';
+
+            const scaleClass = t.featured ? 'md:scale-105 z-10' : '';
+
+            return `
+                <div class="rounded-2xl p-5 border card-hover relative ${borderClass} ${scaleClass} transition-colors">
+                    ${t.featured ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-violet-500 text-white text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap">Most Popular</div>' : ''}
+                    ${t.god ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-xs px-3 py-1 rounded-full font-bold whitespace-nowrap">👑 GOD</div>' : ''}
+                    <div class="uppercase text-xs tracking-widest text-zinc-500 mb-2">${t.name}</div>
+                    <div class="text-3xl font-bold mb-0.5">$${price}</div>
+                    <div class="text-xs text-zinc-500 mb-5">per month</div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between gap-2">
+                            <span class="text-zinc-500">Tokens</span>
+                            <span class="font-mono">${t.tokens}</span>
+                        </div>
+                        <div class="flex justify-between gap-2">
+                            <span class="text-zinc-500">Context</span>
+                            <span class="font-mono">${t.context}</span>
+                        </div>
+                    </div>
+                    ${t.god ? '<div class="mt-4 text-center text-amber-400 text-xs font-bold">10× EVERYTHING</div>' : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleBilling(el, period) {
+        billingPeriod = period;
+        document.querySelectorAll('.billing-btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('text-zinc-400');
+            b.classList.remove('text-black');
+        });
+        el.classList.add('active');
+        el.classList.remove('text-zinc-400');
+        renderPricing();
+    }
+
+    // ─── Cost Calculator ───
+    function updateCost() {
+        const calls = parseInt(document.getElementById('call-slider').value);
+        document.getElementById('call-value').textContent = calls.toLocaleString();
+        document.getElementById('poe-cost').textContent = '$' + (calls * 0.0103).toFixed(2);
+        document.getElementById('openai-cost').textContent = '$' + (calls * 0.074).toFixed(0);
+
+        const tier = document.getElementById('tier-select').value;
+        const stats = {
+            Standard: { tokens: '1,000,000', context: '128K' },
+            Premium:  { tokens: '2,000,000', context: '200K' },
+            God:      { tokens: '10,000,000+', context: '1.28M' },
+        }[tier];
+
+        document.getElementById('token-stats').innerHTML = `
+            <div class="bg-zinc-800/60 rounded-2xl p-4 flex justify-between text-sm">
+                <span class="text-zinc-400">Monthly tokens</span>
+                <span class="font-mono font-semibold ${tier === 'God' ? 'text-amber-400' : ''}">${stats.tokens}</span>
+            </div>
+            <div class="bg-zinc-800/60 rounded-2xl p-4 flex justify-between text-sm">
+                <span class="text-zinc-400">Context window</span>
+                <span class="font-mono font-semibold ${tier === 'God' ? 'text-amber-400' : ''}">${stats.context}</span>
+            </div>
+            ${tier === 'God' ? '<div class="bg-amber-900/20 border border-amber-500/20 rounded-2xl p-4 text-xs text-amber-400 flex items-center gap-2"><i class="fas fa-crown"></i> God Mode: Unlimited teams, dedicated infra, priority support</div>' : ''}
+        `;
+    }
+
+    // ─── Mock Chat ───
+    let mockMode = false;
+    const RESPONSES = [
+        "กำลังประมวลผลด้วย context window 1.28M tokens ครับ... ✓ เสร็จแล้ว",
+        "RAG retrieval สำเร็จ — พบ 12 เอกสารที่เกี่ยวข้อง ใช้ไป 843 tokens",
+        "God Mode activated — ประมวลผลด้วย GPT-5 + Claude 4.5 ensemble",
+        "Token usage: 1,247 tokens • คงเหลือ: 9,872,156 tokens ในเดือนนี้",
+        "วิเคราะห์เสร็จแล้วครับ — ต้องการให้อธิบายเพิ่มเติมส่วนไหนไหม?"
+    ];
+
+    function toggleMockMode() {
+        mockMode = !mockMode;
+        const btn = document.getElementById('mock-btn');
+        const icon = document.getElementById('mock-icon');
+        document.getElementById('mock-status').textContent = `Mock: ${mockMode ? 'ON' : 'OFF'}`;
+        icon.className = mockMode ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+        btn.classList.toggle('bg-emerald-400', mockMode);
+        btn.classList.toggle('text-black', mockMode);
+        btn.classList.toggle('bg-white', !mockMode);
+    }
+
+    function sendMockMessage() {
+        const input = document.getElementById('chat-input');
+        const messages = document.getElementById('chat-messages');
+        if (!input.value.trim()) return;
+
+        const userText = input.value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        messages.innerHTML += `
+            <div class="flex justify-end">
+                <div class="bg-violet-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[80%] text-sm">${userText}</div>
+            </div>`;
+        messages.scrollTop = messages.scrollHeight;
+
+        const typingId = 'typing-' + Date.now();
+        messages.innerHTML += `
+            <div id="${typingId}" class="flex gap-x-3 items-center">
+                <div class="w-7 h-7 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex-shrink-0"></div>
+                <div class="bg-zinc-800 px-4 py-3 rounded-2xl rounded-tl-sm text-zinc-400 text-sm flex items-center gap-2">
+                    <span class="animate-pulse">●</span><span class="animate-pulse" style="animation-delay:.2s">●</span><span class="animate-pulse" style="animation-delay:.4s">●</span>
+                </div>
+            </div>`;
+        messages.scrollTop = messages.scrollHeight;
+
+        setTimeout(() => {
+            const el = document.getElementById(typingId);
+            if (el) {
+                const resp = RESPONSES[Math.floor(Math.random() * RESPONSES.length)];
+                el.innerHTML = `
+                    <div class="w-7 h-7 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex-shrink-0 mt-0.5"></div>
+                    <div class="bg-zinc-800 px-4 py-3 rounded-2xl rounded-tl-sm text-sm max-w-[80%]">${resp}</div>`;
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }, 900);
+
+        input.value = '';
+    }
+
+    // ─── Regen ───
+    let currentBalance = 1248932;
+
+    function simulateRegen() {
+        const added = Math.floor(Math.random() * 8000) + 4000;
+        currentBalance += added;
+        const el = document.getElementById('regen-balance');
+        el.textContent = currentBalance.toLocaleString('en-US');
+        el.classList.add('scale-110');
+        setTimeout(() => el.classList.remove('scale-110'), 300);
+
+        const pct = Math.min(78 + Math.random() * 15, 100);
+        document.getElementById('regen-progress').style.width = pct + '%';
+        setTimeout(() => { document.getElementById('regen-progress').style.width = '78%'; }, 1500);
+
+        showToast(`<i class="fas fa-bolt"></i> +${added.toLocaleString()} tokens regenerated!`);
+    }
+
+    function showToast(html) {
+        const t = document.createElement('div');
+        t.className = 'fixed bottom-8 right-6 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-x-2.5 z-[200] text-sm font-medium transition-all';
+        t.innerHTML = html;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(12px)'; setTimeout(() => t.remove(), 400); }, 2800);
+    }
+
+    // ─── Init ───
+    window.onload = function () {
+        animateCounter('live-models', 247);
+        animateCounter('live-tokens', 1248932);
+        animateCounter('live-users', 18420);
+        renderModels();
+        renderPricing();
+        updateCost();
+    };
+
+    document.getElementById('chat-input').addEventListener('keypress', e => {
+        if (e.key === 'Enter') sendMockMessage();
+    });
+
+    console.log('%cPoe AI Platform — God Mode ✓', 'color:#a5b4fc;font-size:14px;font-weight:bold');
+</script>
+</body>
+</html>
