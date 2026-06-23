@@ -50,12 +50,17 @@
     "zustand": "5.0.6"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
     "@tailwindcss/postcss": "^4",
     "@types/ms": "2.1.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "15.5.13",
+    "babel-jest": "^30.4.1",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "raw-loader": "4.0.2",
     "tailwindcss": "^4",
     "tw-animate-css": "1.3.6",
